@@ -40,13 +40,13 @@ def create_processor_pipeline(path: str) -> ColPaliProcessor:
 
 
 @bentoml.service(
-    name="colpali",
+    name="colpali_batch",
     workers=1,
     traffic={"concurrency": 64},
 )
-class ColPaliService:
+class ColPaliBatchService:
     """
-    ColPali service for embedding images and queries, and scoring them.
+    ColPali service (batch intermediate service) for embedding images and queries, and scoring them.
     Provides batch processing capabilities.
 
     NOTE: You need to build the model using `bentoml.models.create(name="colpali_model")` before using this service.
@@ -153,3 +153,57 @@ class ColPaliService:
             image_embeddings=image_embeddings,
             query_embeddings=query_embeddings,
         )
+
+
+@bentoml.service(name="colpali")
+class ColPaliService:
+    """
+    ColPali service for embedding images and queries, and scoring them.
+    Provides batch processing capabilities.
+
+    NOTE: You need to build the model using `bentoml.models.create(name="colpali_model")` before using this service.
+    """
+
+    _colpali_batch = bentoml.depends(ColPaliBatchService)
+
+    @bentoml.api
+    async def embed_images(self, images: List[ImagePayload]) -> np.ndarray:
+        """
+        Generate image embeddings of shape (batch_size, sequence_length, embedding_dim).
+        """
+        return await self._colpali_batch.to_async.embed_images(images)
+
+    @bentoml.api
+    async def embed_queries(self, queries: List[str]) -> np.ndarray:
+        """
+        Generate query embeddings of shape (batch_size, sequence_length, embedding_dim).
+        """
+        return await self._colpali_batch.to_async.embed_queries(queries)
+
+    @bentoml.api
+    async def score_embeddings(
+        self,
+        image_embeddings: np.ndarray,
+        query_embeddings: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Returns the late-interaction/MaxSim scores of shape (num_queries, num_images).
+        """
+        return await self._colpali_batch.to_async.score_embeddings(image_embeddings, query_embeddings)
+
+    @bentoml.api
+    async def score(
+        self,
+        images: Annotated[List[ImagePayload], MinLen(1)],
+        queries: Annotated[List[str], MinLen(1)],
+    ) -> np.ndarray:
+        """
+        Returns the late-interaction/MaxSim scores of the queries against the images.
+        """
+
+        image_embeddings, query_embeddings = await asyncio.gather(
+            self._colpali_batch.to_async.embed_images(images),
+            self._colpali_batch.to_async.embed_queries(queries),
+        )
+
+        return await self._colpali_batch.to_async.score_embeddings(image_embeddings, query_embeddings)
