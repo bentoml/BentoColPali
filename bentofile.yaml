@@ -1,0 +1,10 @@
+service: "bentocolpali.service:ColPaliService"
+labels:
+  project: colpali
+include:
+  - "bentocolpali/**/*.py"
+python:
+  requirements_txt: "requirements.txt"
+  lock_packages: false
+docker:
+  cuda_version: "12.1"
