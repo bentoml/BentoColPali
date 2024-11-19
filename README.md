@@ -48,39 +48,26 @@ We have defined a BentoML Service in `service.py`. Run `bentoml serve` in you
 bentoml serve .
 ```
 
-The Service is accessible at [http://localhost:3000](http://localhost:3000/). You can interact with it using the Swagger UI or in other different ways:
+The Service is accessible at [http://localhost:3000](http://localhost:3000/). You can interact with it using the Swagger UI or in other different ways detailed in the [Examples](##examples) section.
 
-### With CURL
+## API Routes
 
-You can query the service using the following snippet (the strings in the `base_64` fields are dummy examples):
+| Route               | Input                                                        | Output                  | Description                                                  |
+| ------------------- | ------------------------------------------------------------ | ----------------------- | ------------------------------------------------------------ |
+| `/embed_images`     | - `items`: List of `ImagePayload`                            | Multi-vector embeddings | Generates image embeddings with shape (batch_size, sequence_length, embedding_dim). |
+| `/embed_queries`    | - `items`: List of strings                                   | Multi-vector embeddings | Generates query embeddings with shape (batch_size, sequence_length, embedding_dim). |
+| `/score_embeddings` | - `image_embeddings`: List of 2D-arrays<br>- `query_embeddings`: List of 2D-arrays | Scores                  | Computes late-interaction/MaxSim scores between pre-computed embeddings. Returns scores with shape (num_queries, num_images). |
+| `/score`            | - `images`: List of `ImagePayload`<br>- `queries`: List of strings | Scores                  | One-shot computation of similarity scores between images and queries, i.e. run the 3 routes above in the right order.<br />Returns scores with shape (num_queries, num_images). |
 
-```bash
-curl -X POST -H "content-type: application/json" --data '{
-    "queries": [
-        "How does the positional encoding work?",
-        "How does the scaled dot attention product work?"
-    ],
-    "images": [
-        {
-            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU..."
-        },
-        {
-            "url": "data:image/png;base64,iVBORw0KGFEWAAAANSUhU..."
-        }
-    ]
-}' http://localhost:3000/score
-```
-
-...which should result a response similar to the following JSON:
+An `ImagePayload` is a JSON object with a single field `url` that contains a base64-encoded image. The `url` field should be formatted like this:
 
 ```json
 {
-  "score": [
-    [15.25727272, 6.47964382],
-    [11.67781448, 16.54862022]
-  ]
+    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU..."
 }
 ```
+
+## Examples
 
 ### With a Python client
 
@@ -112,6 +99,38 @@ with bentoml.SyncHTTPClient("http://localhost:3000") as client:
     )
 
 print("Scores:", scores)
+```
+
+You should get a response similar to:
+
+```json
+{
+  "score": [
+    [15.25727272, 6.47964382],
+    [11.67781448, 16.54862022]
+  ]
+}
+```
+
+### With CURL
+
+Note: the strings in the `base_64` fields are dummy examples.
+
+```bash
+curl -X POST -H "content-type: application/json" --data '{
+    "queries": [
+        "How does the positional encoding work?",
+        "How does the scaled dot attention product work?"
+    ],
+    "images": [
+        {
+            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEU..."
+        },
+        {
+            "url": "data:image/png;base64,iVBORw0KGFEWAAAANSUhU..."
+        }
+    ]
+}' http://localhost:3000/score
 ```
 
 ## Deploy to BentoCloud
