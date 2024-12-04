@@ -98,18 +98,16 @@ with bentoml.SyncHTTPClient("http://localhost:3000") as client:
         query_embeddings=query_embeddings,
     )
 
-print("Scores:", scores)
+print(scores)
 ```
 
 You should get a response similar to:
 
 ```json
-{
-  "score": [
+[
     [15.25727272, 6.47964382],
     [11.67781448, 16.54862022]
-  ]
-}
+]
 ```
 
 ### With CURL
