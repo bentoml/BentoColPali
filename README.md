@@ -8,7 +8,7 @@ Using ColPali removes the need for potentially complex and brittle layout recogn
 
 ![ColPali Architecture](assets/colpali_architecture.webp)
 
-This is a BentoML example project, demonstrating how to build a ColPali inference API server for ColPali. See [here](https://github.com/bentoml/BentoML?tab=readme-ov-file#%EF%B8%8F-what-you-can-build-with-bentoml) for a full list of BentoML example projects.
+This is a BentoML example project, demonstrating how to build a ColPali inference API server for ColPali. See [here](https://docs.bentoml.com/en/latest/examples/overview.html) for a full list of BentoML example projects.
 
 > [!NOTE]
 > The recommended ColPali checkpoint for this repository is [`vidore/colpali-v1.2`](https://huggingface.co/vidore/colpali-v1.2).
